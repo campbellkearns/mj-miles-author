@@ -1,5 +1,29 @@
 ---
+import { getCollection } from 'astro:content';
+import settings from '../content/settings/general.json';
 
+// Get all books, sorted by order
+const allBooks = await getCollection('books');
+const books = allBooks
+  .filter(book => !book.data.draft)
+  .sort((a, b) => a.data.order - b.data.order);
+
+// Get featured books
+const featuredBooks = books.filter(book => book.data.featured);
+
+// Get recent blog posts
+const allBlogPosts = await getCollection('blog');
+const blogPosts = allBlogPosts
+  .filter(post => !post.data.draft)
+  .sort((a, b) => b.data.publishDate.getTime() - a.data.publishDate.getTime())
+  .slice(0, 3);
+
+// Get upcoming events
+const allEvents = await getCollection('events');
+const upcomingEvents = allEvents
+  .filter(event => event.data.eventDate >= new Date())
+  .sort((a, b) => a.data.eventDate.getTime() - b.data.eventDate.getTime())
+  .slice(0, 3);
 ---
 
 <html lang="en">
@@ -8,9 +32,246 @@
 		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 		<meta name="viewport" content="width=device-width" />
 		<meta name="generator" content={Astro.generator} />
-		<title>Astro</title>
+		<meta name="description" content={settings.siteDescription} />
+		<title>{settings.siteTitle}</title>
+		<style>
+			:root {
+				--primary-color: #6366f1;
+				--text-color: #1f2937;
+				--bg-color: #f9fafb;
+				--card-bg: #ffffff;
+			}
+			* {
+				box-sizing: border-box;
+				margin: 0;
+				padding: 0;
+			}
+			body {
+				font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+				line-height: 1.6;
+				color: var(--text-color);
+				background-color: var(--bg-color);
+			}
+			.container {
+				max-width: 1200px;
+				margin: 0 auto;
+				padding: 0 20px;
+			}
+			header {
+				background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+				color: white;
+				padding: 3rem 0;
+				text-align: center;
+			}
+			header h1 {
+				font-size: 2.5rem;
+				margin-bottom: 0.5rem;
+			}
+			header p {
+				font-size: 1.25rem;
+				opacity: 0.9;
+			}
+			nav {
+				background: white;
+				box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+				padding: 1rem 0;
+				margin-bottom: 2rem;
+			}
+			nav ul {
+				list-style: none;
+				display: flex;
+				justify-content: center;
+				gap: 2rem;
+			}
+			nav a {
+				color: var(--text-color);
+				text-decoration: none;
+				font-weight: 500;
+				transition: color 0.3s;
+			}
+			nav a:hover {
+				color: var(--primary-color);
+			}
+			.section {
+				margin: 3rem 0;
+			}
+			.section h2 {
+				font-size: 2rem;
+				margin-bottom: 1.5rem;
+				color: var(--primary-color);
+			}
+			.grid {
+				display: grid;
+				grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+				gap: 2rem;
+			}
+			.card {
+				background: var(--card-bg);
+				border-radius: 8px;
+				padding: 1.5rem;
+				box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+				transition: transform 0.3s, box-shadow 0.3s;
+			}
+			.card:hover {
+				transform: translateY(-4px);
+				box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+			}
+			.card h3 {
+				color: var(--primary-color);
+				margin-bottom: 0.75rem;
+			}
+			.card .date {
+				font-size: 0.9rem;
+				color: #6b7280;
+				margin-bottom: 0.5rem;
+			}
+			.card p {
+				color: #4b5563;
+			}
+			.book-card {
+				display: flex;
+				flex-direction: column;
+			}
+			.book-cover {
+				width: 100%;
+				height: 400px;
+				object-fit: cover;
+				border-radius: 4px;
+				margin-bottom: 1rem;
+				background: #e5e7eb;
+			}
+			.cta {
+				background: var(--primary-color);
+				color: white;
+				padding: 0.75rem 1.5rem;
+				border-radius: 4px;
+				text-decoration: none;
+				display: inline-block;
+				margin-top: 1rem;
+				transition: background 0.3s;
+			}
+			.cta:hover {
+				background: #4f46e5;
+			}
+			footer {
+				background: var(--text-color);
+				color: white;
+				text-align: center;
+				padding: 2rem 0;
+				margin-top: 4rem;
+			}
+			.admin-link {
+				position: fixed;
+				bottom: 20px;
+				right: 20px;
+				background: var(--primary-color);
+				color: white;
+				padding: 1rem 1.5rem;
+				border-radius: 50px;
+				text-decoration: none;
+				box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+				transition: all 0.3s;
+			}
+			.admin-link:hover {
+				transform: scale(1.05);
+				box-shadow: 0 6px 16px rgba(99, 102, 241, 0.6);
+			}
+		</style>
 	</head>
 	<body>
-		<h1>Astro</h1>
+		<header>
+			<div class="container">
+				<h1>{settings.authorName}</h1>
+				<p>{settings.authorBio}</p>
+			</div>
+		</header>
+
+		<nav>
+			<ul>
+				<li><a href="/">Home</a></li>
+				<li><a href="/books">Books</a></li>
+				<li><a href="/blog">Blog</a></li>
+				<li><a href="/events">Events</a></li>
+				<li><a href="/about">About</a></li>
+			</ul>
+		</nav>
+
+		<main class="container">
+			{featuredBooks.length > 0 && (
+				<section class="section">
+					<h2>Featured Books</h2>
+					<div class="grid">
+						{featuredBooks.map((book) => (
+							<div class="card book-card">
+								<img
+									src={book.data.coverImage}
+									alt={book.data.title}
+									class="book-cover"
+								/>
+								<h3>{book.data.title}</h3>
+								<p class="date">{book.data.ageRange}</p>
+								<p>{book.data.description}</p>
+								<a href={`/books/${book.slug}`} class="cta">Learn More</a>
+							</div>
+						))}
+					</div>
+				</section>
+			)}
+
+			{blogPosts.length > 0 && (
+				<section class="section">
+					<h2>Latest Blog Posts</h2>
+					<div class="grid">
+						{blogPosts.map((post) => (
+							<div class="card">
+								<h3>{post.data.title}</h3>
+								<p class="date">
+									{post.data.publishDate.toLocaleDateString('en-US', {
+										year: 'numeric',
+										month: 'long',
+										day: 'numeric'
+									})}
+								</p>
+								<p>{post.data.description}</p>
+								<a href={`/blog/${post.slug}`} class="cta">Read More</a>
+							</div>
+						))}
+					</div>
+				</section>
+			)}
+
+			{upcomingEvents.length > 0 && (
+				<section class="section">
+					<h2>Upcoming Events</h2>
+					<div class="grid">
+						{upcomingEvents.map((event) => (
+							<div class="card">
+								<h3>{event.data.title}</h3>
+								<p class="date">
+									{event.data.eventDate.toLocaleDateString('en-US', {
+										year: 'numeric',
+										month: 'long',
+										day: 'numeric',
+										hour: 'numeric',
+										minute: '2-digit'
+									})}
+								</p>
+								<p><strong>{event.data.location}</strong></p>
+								<p>{event.data.description}</p>
+								<a href={`/events/${event.slug}`} class="cta">Details</a>
+							</div>
+						))}
+					</div>
+				</section>
+			)}
+		</main>
+
+		<footer>
+			<div class="container">
+				<p>&copy; {new Date().getFullYear()} {settings.authorName}. All rights reserved.</p>
+			</div>
+		</footer>
+
+		<a href="/admin" class="admin-link">✏️ Admin</a>
 	</body>
 </html>
